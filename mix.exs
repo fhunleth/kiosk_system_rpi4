@@ -5,12 +5,20 @@ defmodule NervesSystemRpi4.MixProject do
   @version Path.join(__DIR__, "VERSION")
            |> File.read!()
            |> String.trim()
+  build_runner =
+    if System.get_env("CI") != nil do
+      Nerves.Artifact.BuildRunners.Local
+    else
+      Nerves.Artifact.BuildRunners.Docker
+    end
+
+  @build_runner build_runner
 
   def project do
     [
       app: @app,
       version: @version,
-      elixir: "~> 1.6",
+      elixir: "~> 1.8",
       compilers: Mix.compilers() ++ [:nerves_package],
       nerves_package: nerves_package(),
       description: description(),
@@ -37,6 +45,7 @@ defmodule NervesSystemRpi4.MixProject do
       artifact_sites: [
         {:github_releases, "behind-design/#{@app}"}
       ],
+      build_runner: @build_runner,
       build_runner_opts: build_runner_opts(),
       platform: Nerves.System.BR,
       platform_config: [
@@ -48,8 +57,8 @@ defmodule NervesSystemRpi4.MixProject do
 
   defp deps do
     [
-      {:nerves, "~> 1.5", runtime: false},
-      {:nerves_system_br, "1.8.5", runtime: false},
+      {:nerves, "~> 1.5.0", runtime: false},
+      {:nerves_system_br, "1.9.1", runtime: false},
       {:nerves_toolchain_arm_unknown_linux_gnueabihf, "1.2.0", runtime: false},
       {:nerves_system_linter, "~> 0.3.0", runtime: false},
       {:ex_doc, "~> 0.18", only: [:dev, :test], runtime: false}
@@ -58,7 +67,7 @@ defmodule NervesSystemRpi4.MixProject do
 
   defp description do
     """
-    Nerves System - Raspberry Pi 4
+    Nerves QtWebEngine Kiosk System - Raspberry Pi 4
     """
   end
 
@@ -87,6 +96,7 @@ defmodule NervesSystemRpi4.MixProject do
       "post-createfs.sh",
       "ramoops.dts",
       "README.md",
+      "users_table.txt",
       "VERSION"
     ]
   end
@@ -98,9 +108,9 @@ defmodule NervesSystemRpi4.MixProject do
 
   defp build_runner_opts() do
     if primary_site = System.get_env("BR2_PRIMARY_SITE") do
-      [make_args: ["BR2_PRIMARY_SITE=#{primary_site}"]]
+      [make_args: ["BR2_PRIMARY_SITE=#{primary_site}", "PARALLEL_JOBS=8"]]
     else
-      []
+      [make_args: ["PARALLEL_JOBS=8"]]
     end
   end
 
