@@ -1,1 +1,3 @@
 kiosk -1 kiosk -1 * - - video,input Kiosk user
+- - render -1 * - - - DRI rendering nodes
+- - kvm -1 * - - - kvm nodes
